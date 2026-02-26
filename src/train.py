@@ -67,4 +67,4 @@ model.fit(X_train_vec, y_train)
 y_pred = model.predict(X_test_vec)
 acc = accuracy_score(y_test, y_pred)
 
-print(f"✅ Accuracy del modelo: {acc:.4f}")
+print(f"Accuracy del modelo de spam: {acc:.4f}")

@@ -1,52 +1,94 @@
 # Pipeline de machine learning para deteccion de spam
 
 import pandas as pd
+import re
+import os
+import pickle
+
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 
-# Cargar dataset (lectura robusta)
+
+# =========================
+# FUNCION DE LIMPIEZA
+# =========================
+
+def clean_text(text):
+    text = text.lower()                 # convertir a minúsculas
+    text = re.sub(r'\d+', '', text)     # eliminar números
+    text = re.sub(r'[^\w\s]', '', text) # eliminar signos de puntuación
+    text = re.sub(r'\s+', ' ', text)    # eliminar espacios extra
+    return text.strip()
+
+
+# =========================
+# CARGAR DATASET
+# =========================
+
 print("Cargando dataset...")
 
 try:
-    # Intento normal (coma)
     df = pd.read_csv("data/spam.csv", encoding="latin-1")
-    
-    # Si solo detecta 1 columna, probar con ;
+
     if df.shape[1] == 1:
         df = pd.read_csv("data/spam.csv", encoding="latin-1", sep=";")
-    
-    # Si aún hay 1 columna, probar con tab
+
     if df.shape[1] == 1:
         df = pd.read_csv("data/spam.csv", encoding="latin-1", sep="\t")
 
 except Exception as e:
-    print(" Error leyendo el CSV:", e)
+    print("Error leyendo el CSV:", e)
     exit()
 
 print("Columnas detectadas:", df.columns)
 print("Shape:", df.shape)
 
-# Normalizar nombres de columnas
+
+# =========================
+# NORMALIZAR COLUMNAS
+# =========================
+
 if "v1" in df.columns and "v2" in df.columns:
     df = df.rename(columns={"v1": "categoria", "v2": "mensaje"})
+
 elif df.shape[1] >= 2:
     df = df.iloc[:, :2]
     df.columns = ["categoria", "mensaje"]
+
 else:
-    print(" No se pudieron detectar columnas correctas")
+    print("No se pudieron detectar columnas correctas")
     exit()
 
 print("Columnas finales:", df.columns)
 
-# Convertir etiquetas a números
+
+# =========================
+# LIMPIAR TEXTO
+# =========================
+
+df["mensaje"] = df["mensaje"].apply(clean_text)
+
+
+# =========================
+# CONVERTIR ETIQUETAS
+# =========================
+
 df["categoria"] = df["categoria"].map({"ham": 0, "spam": 1})
 
-# Eliminar filas con valores nulos
+
+# =========================
+# ELIMINAR NULOS
+# =========================
+
 df = df.dropna(subset=["mensaje", "categoria"])
 
-# Separar datos
+
+# =========================
+# DIVIDIR DATOS
+# =========================
+
 X_train, X_test, y_train, y_test = train_test_split(
     df["mensaje"],
     df["categoria"],
@@ -54,33 +96,54 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
-# Vectorizar texto
-vectorizer = TfidfVectorizer()
+
+# =========================
+# VECTORIZAR TEXTO
+# =========================
+
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    ngram_range=(1,3),
+    max_features=7000
+)
+
 X_train_vec = vectorizer.fit_transform(X_train)
 X_test_vec = vectorizer.transform(X_test)
 
-# Entrenar modelo
+
+# =========================
+# ENTRENAR MODELO
+# =========================
+
 model = MultinomialNB()
 model.fit(X_train_vec, y_train)
 
-# Evaluar
+
+# =========================
+# EVALUAR MODELO
+# =========================
+
 y_pred = model.predict(X_test_vec)
+
 acc = accuracy_score(y_test, y_pred)
 
-print(f"Accuracy del modelo de spam: {acc:.4f}")
+print(f"\nAccuracy del modelo de spam: {acc:.4f}")
 
-import os
-import pickle
+print("\nReporte de clasificación:")
 
-# Crear carpeta si no existe
+print(classification_report(y_test, y_pred))
+
+
+# =========================
+# GUARDAR MODELO
+# =========================
+
 os.makedirs("src/model", exist_ok=True)
 
-# Guardar modelo
 with open("src/model/model.pkl", "wb") as f:
     pickle.dump(model, f)
 
-# Guardar vectorizador
 with open("src/model/vectorizer.pkl", "wb") as f:
     pickle.dump(vectorizer, f)
 
-print("Modelo y vectorizador guardados correctamente")
+print("\nModelo y vectorizador guardados correctamente")

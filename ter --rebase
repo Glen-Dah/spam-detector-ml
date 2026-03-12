@@ -1,0 +1,75 @@
+[33mcommit f6803d5687d256bebed996a2ef2eac4c737f15ea[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Mar 11 20:28:01 2026 -0700
+
+    feat: implementación de preprocesamiento avanzado de texto
+    
+    Se agrega una función de limpieza de texto para mejorar la calidad de los datos utilizados en el entrenamiento del modelo de spam.
+    
+    Cambios realizados: conversión de texto a minúsculas, eliminación de números, eliminación de signos de puntuación y eliminación de espacios innecesarios.
+    
+    Estas mejoras reducen el ruido en el dataset y permiten que el modelo aprenda patrones más claros en los mensajes.
+
+[33mcommit 7e33468ab8f2e42e05935e1fc25dcd6db761cc3b[m
+Merge: fada8c6 f786f85
+Author: Eduardo24680 <cruz_emc35@hotmail.com>
+Date:   Thu Mar 5 23:17:11 2026 -0700
+
+    Eduardo-FrontEnd: interfaz de usuario en Streamlit y graficas de riesgo
+
+[33mcommit fada8c64ef26413cd73ae2d246fb2284c09caca6[m
+Author: Eduardo24680 <cruz_emc35@hotmail.com>
+Date:   Thu Mar 5 23:05:31 2026 -0700
+
+    Eduardo-FrontEnd: interfaz de usuario en Streamlit y graficas de riesgo
+
+[33mcommit f786f859edce8a2a3cfeb6c532d9525da7f1b36f[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Mar 4 18:28:05 2026 -0700
+
+    feat: script de prediccion manual de spam
+
+[33mcommit e6027057bef15f424947d5ea4c5909b52330245f[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Mar 4 18:22:42 2026 -0700
+
+    feat: se guarda modelo y vectorizador entrenados
+
+[33mcommit 333d83c1f7da4b536a109e1b3206c90a3a581f5b[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Mar 4 18:18:15 2026 -0700
+
+    docs: se agrega README profesional del proyecto
+
+[33mcommit 8b98483743d783ca6e43421efe8417839b2c6d68[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Feb 25 23:10:09 2026 -0700
+
+    test: entrenamiento y evaluacion del modelo de deteccion de spam
+    
+    - se ejecuta entrenamiento completo del clasificador
+    - se valida el modelo con conjunto de prueba
+    - accuracy aproximada del 96% en dataset de correos
+    - modelo listo para integracion con interfaz web
+
+[33mcommit e0382a0bf1a1c29f4b58afb13d4a87da730e0ab6[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Feb 25 23:07:34 2026 -0700
+
+    feat: implementacion del modelo de machine learning para deteccion de spam
+    
+    - se implementa vectorizacion de texto con TF-IDF
+    - se entrena clasificador Multinomial Naive Bayes
+    - se prepara division de datos entrenamiento/prueba
+    - se establece pipeline base de clasificacion
+
+[33mcommit c078f634abdd9140c9cedc3fb0f5435028609e85[m
+Author: Carlos Hernandez <carloshernandez08011@gmail.com>
+Date:   Wed Feb 25 23:03:06 2026 -0700
+
+    feat: estructura inicial del proyecto de deteccion de spam
+    
+    - se crea la estructura base del repositorio
+    - se agregan carpetas src, data y app
+    - se configura archivo requirements.txt
+    - se prepara el entorno para modelo de machine learning

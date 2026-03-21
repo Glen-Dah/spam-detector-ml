@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detector de Spam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <h1>Detector de Spam</h1>
+
+    <form method="POST">
+        <textarea name="mensaje" placeholder="Escribe un mensaje"></textarea>
+        <br><br>
+        <button type="submit">Analizar</button>
+    </form>
+
+    {% if resultado %}
+        <h2>Resultado: {{ resultado }}</h2>
+
+        <p>Palabras detectadas:</p>
+        <ul>
+            {% for palabra in palabras %}
+                <li>{{ palabra }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+</body>
+</html>

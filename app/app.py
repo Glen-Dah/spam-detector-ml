@@ -34,7 +34,7 @@ def index():
 
         for i in range(len(vector)):
             if vector[i] > 0:
-                palabras.append(feature_names[i])
+                palabras.append(f"Palabra detectada: {feature_names[i]}")
 
     return render_template("index.html", resultado=resultado, palabras=palabras[:10])
 

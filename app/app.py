@@ -54,7 +54,7 @@ def index():
         # 🧾 HISTORIAL (PASO 3)
         historial.append({
             "mensaje": text,
-            "resultado": resultado
+            "resultado": resultado + " ✔"
         })
 
     return render_template(

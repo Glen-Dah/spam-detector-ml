@@ -14,8 +14,9 @@
         <button type="submit">Analizar</button>
     </form>
 
-    {% if resultado %}
-        <h2>Resultado: {{ resultado }}</h2>
+        {% if resultado %}
+    <h2>{{ resultado }}</h2>
+{% endif %}
 
         <p>Palabras detectadas:</p>
         <ul>
@@ -24,6 +25,13 @@
             {% endfor %}
         </ul>
     {% endif %}
+
+    <h2>Historial</h2>
+<ul>
+    {% for item in historial %}
+        <li>{{ item.mensaje }} → {{ item.resultado }}</li>
+    {% endfor %}
+</ul>
 
 </body>
 </html>

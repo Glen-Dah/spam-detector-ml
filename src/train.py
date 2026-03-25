@@ -103,8 +103,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 vectorizer = TfidfVectorizer(
     stop_words="english",
-    ngram_range=(1,3),
-    max_features=7000
+    ngram_range=(1,2),
+    max_features=5000,
+    min_df=2
 )
 
 X_train_vec = vectorizer.fit_transform(X_train)
@@ -115,7 +116,7 @@ X_test_vec = vectorizer.transform(X_test)
 # ENTRENAR MODELO
 # =========================
 
-model = MultinomialNB()
+model = MultinomialNB(alpha=0.5)
 model.fit(X_train_vec, y_train)
 
 

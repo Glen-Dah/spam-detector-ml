@@ -11,32 +11,59 @@ with open("../src/model/model.pkl", "rb") as f:
 with open("../src/model/vectorizer.pkl", "rb") as f:
     vectorizer = pickle.load(f)
 
+# Historial global
+historial = []
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     resultado = None
     palabras = []
 
     if request.method == "POST":
-        texto = request.form["mensaje"]
+        text = request.form["mensaje"]
 
-        vec = vectorizer.transform([texto])
+        
+
+        # 🔴 VALIDACIÓN (PASO 2)
+        if not text.strip():
+            return render_template(
+                "index.html",
+                resultado="⚠️ Ingresa un mensaje válido",
+                palabras=[],
+                historial=historial
+            )
+
+        # 🔤 Vectorizar
+        vec = vectorizer.transform([text])
         pred = model.predict(vec)[0]
 
-        # Resultado
+        # 📊 Resultado
         if pred == 1:
-            resultado = "SPAM"
+            resultado = "🚨 SPAM detectado"
         else:
-            resultado = "NO SPAM"
+            resultado = "✅ Mensaje limpio"
 
-        # Explicación
+        # 🧠 Explicación (palabras detectadas)
         feature_names = vectorizer.get_feature_names_out()
         vector = vec.toarray()[0]
 
         for i in range(len(vector)):
             if vector[i] > 0:
-                palabras.append(f"Palabra detectada: {feature_names[i]}")
+                palabras.append(feature_names[i])
 
-    return render_template("index.html", resultado=resultado, palabras=palabras[:10])
+        # 🧾 HISTORIAL (PASO 3)
+        historial.append({
+            "mensaje": text,
+            "resultado": resultado
+        })
+
+    return render_template(
+        "index.html",
+        resultado=resultado,
+        palabras=palabras[:10],
+        historial=historial
+    )
+    
 
 if __name__ == "__main__":
     app.run(debug=True)

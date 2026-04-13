@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>detectdo - Detector de Spam</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="logo-group">
+            <div class="logo-icon">✔</div>
+            <span>detectdo</span>
+        </div>
+        <div class="user-group">
+            <div class="stat-counter">1</div>
+            <div class="notification-icon">⚠</div>
+            <div class="profile-icon">👤</div>
+            <div class="user-name">Usuario</div>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <h1 class="hero-title">Detector de Spam</h1>
+        <p class="hero-subtitle">
+            Una herramienta integral para identificar y gestionar correos electrónicos no deseados.
+            Analice remitentes y asuntos para una detección precisa.
+        </p>
+        <div class="search-container">
+            <div class="search-icon">🔍</div>
+            <input type="text" placeholder="Remitente/Asunto:">
+        </div>
+        <button class="analyze-button">ANALIZAR</button>
+    </section>
+
+    <div class="content-area">
+        <div class="card history-card">
+            <h2 class="card-title">HISTORIAL:</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">CLASIFICACIÓN</th>
+                        <th style="width: 50%;">CONTENIDO</th>
+                        <th style="width: 25%;">MOTIVO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="summary-row">
+                        <td class="summary-count-cell">
+                            <span class="summary-count">Spam detectado: 128</span>
+                            <span class="tag tag-spam tag-yes-count">SÍ, ES SPAM (128)</span>
+                        </td>
+                        <td>Ganaste una tarjeta de regalo, haz clic <a href="#">AQUÍ</a></td>
+                        <td>Contenido engañoso</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-spam">SÍ</span></td>
+                        <td>Ganaste una tarjeta de regalo, haz clic A...</td>
+                        <td>Se ha detectado un enlace de suplantación de identidad</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag tag-ham">NO</span></td>
+                        <td>Enviado a scnurt@constactamentja</td>
+                        <td>Correo electrónico de servicio legítimo</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card stats-card">
+            <h2 class="card-title">ESTADÍSTICAS:</h2>
+            <ul class="stats-list">
+                <li><b>Conclusiones:</b> Análisis precise de los remitentes, dominios, y más...</li>
+                <li>
+                    <label class="collapsible-label">
+                        <b>Detalles:</b>
+                        <span class="collapse-icon">▼</span>
+                    </label>
+                </li>
+                <li><b>Tecnología:</b> Python HTML/CSS</li>
+            </ul>
+        </div>
+    </div>
+
+</body>
+</html>

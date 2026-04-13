@@ -1,0 +1,140 @@
+/* --- VARIABLES Y ESTILOS GLOBALES --- */
+:root {
+    --bg-color: #F7FAFC;
+    --header-bg: #FFFFFF;
+    --text-primary: #1A202C;
+    --text-secondary: #1b212b;
+    --brand-purple: #6B46C1;
+    --brand-purple-hover: #553C9A;
+    --spam-red: #C53030;
+    --ham-green: #38A169;
+    --link-blue: #3182CE;
+    --border-color: #E2E8F0;
+    --font-family: 'Inter', sans-serif;
+    --border-radius-md: 12px;
+    --border-radius-lg: 20px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 40px;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- HEADER --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+}
+
+.logo-group {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--brand-purple);
+}
+
+.logo-icon {
+    margin-right: 8px;
+    width: 20px; height: 20px;
+    background-color: var(--brand-purple);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; font-size: 14px;
+}
+
+.user-group {
+    display: flex;
+    align-items: center;
+}
+
+.notification-icon {
+    width: 24px; height: 24px;
+    background-color: var(--spam-red);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 15px;
+}
+
+.profile-icon {
+    width: 32px; height: 32px;
+    background-color: #E9D8FD;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* --- HERO SECTION --- */
+.hero-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 100px 20px 40px;
+}
+
+.hero-title { font-size: 48px; font-weight: 800; margin-bottom: 10px; }
+.hero-subtitle { color: var(--text-secondary); max-width: 600px; margin-bottom: 30px; }
+
+.search-container {
+    width: 100%; max-width: 600px;
+    position: relative; margin-bottom: 20px;
+}
+
+.search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+
+.search-container input {
+    width: 100%; padding: 18px 20px 18px 50px;
+    border: 1px solid var(--border-color);
+    border-radius: 50px; box-sizing: border-box;
+}
+
+.analyze-button {
+    padding: 16px 40px; background-color: var(--brand-purple);
+    color: white; border: none; border-radius: 20px;
+    font-weight: 600; cursor: pointer;
+}
+
+/* --- TARJETAS --- */
+.content-area {
+    display: flex; justify-content: center;
+    max-width: 1200px; margin: 0 auto; padding-bottom: 50px;
+}
+
+.card {
+    background: white; border-radius: 12px;
+    padding: 20px; border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.history-card { flex: 1; margin-right: 20px; }
+.stats-card { width: 300px; }
+
+.card-title { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 20px; }
+
+/* --- TABLA --- */
+.history-table { width: 100%; border-collapse: collapse; }
+.history-table th { text-align: left; font-size: 12px; color: var(--text-secondary); padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+.history-table td { padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+
+.tag { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; color: white; text-transform: uppercase; }
+.tag-spam { background: var(--spam-red); }
+.tag-ham { background: var(--ham-green); }
+.tag-yes-count { display: block; text-align: center; margin-top: 5px; }
+
+.stats-list { list-style: none; padding: 0; }
+.stats-list li { margin-bottom: 10px; font-size: 14px; }
+.collapsible-label { display: flex; justify-content: space-between; cursor: pointer; }

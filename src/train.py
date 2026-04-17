@@ -1,3 +1,5 @@
+# Mejora Sprint 6: limpieza avanzada para español
+
 import pandas as pd
 import re
 import os

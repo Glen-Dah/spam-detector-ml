@@ -42,5 +42,6 @@ for i in range(len(vector)):
     if vector[i] > 0:
         palabras.append(feature_names[i])
 
-print("\nPalabras clave detectadas:")
-print(palabras[:10])
+print("\n🔎 Explicación del modelo:")
+for palabra in palabras[:10]:
+    print(f"- '{palabra}' influyó en la clasificación")

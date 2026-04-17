@@ -14,12 +14,11 @@
         <button type="submit">Analizar</button>
     </form>
 
-    <h3>Analizador de mensajes en tiempo real</h3>
-    
-        {% if resultado %}
-    <h2>{{ resultado }}</h2>
-{% endif %}
+    {% if resultado %}
+        <h2>{{ resultado }}</h2>
+    {% endif %}
 
+    {% if palabras %}
         <p>Palabras detectadas:</p>
         <ul>
             {% for palabra in palabras %}
@@ -28,12 +27,14 @@
         </ul>
     {% endif %}
 
-    <h2>Historial</h2>
-<ul>
-    {% for item in historial %}
-        <li>{{ item.mensaje }} → {{ item.resultado }}</li>
-    {% endfor %}
-</ul>
+    {% if historial %}
+        <h2>Historial</h2>
+        <ul>
+            {% for item in historial %}
+                <li>{{ item.mensaje }} → {{ item.resultado }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
 </body>
 </html>

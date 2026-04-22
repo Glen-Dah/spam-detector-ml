@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>detectdo - Detector de Spam</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
@@ -15,7 +15,7 @@
             <span>detectdo</span>
         </div>
         <div class="user-group">
-            <div class="stat-counter">1</div>
+            <div class="stat-counter">{{ historial|length }}</div>
             <div class="notification-icon">⚠</div>
             <div class="profile-icon">👤</div>
             <div class="user-name">Usuario</div>
@@ -28,11 +28,32 @@
             Una herramienta integral para identificar y gestionar correos electrónicos no deseados.
             Analice remitentes y asuntos para una detección precisa.
         </p>
-        <div class="search-container">
-            <div class="search-icon">🔍</div>
-            <input type="text" placeholder="Remitente/Asunto:">
+
+        <form method="POST">
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input type="text" name="mensaje" placeholder="Remitente/Asunto:" required>
+            </div>
+
+            <button type="submit" class="analyze-button">ANALIZAR</button>
+        </form>
+
+        {% if resultado %}
+        <div class="card" style="margin-top: 20px; max-width: 700px; width: 100%;">
+            <h2>{{ resultado }}</h2>
+
+            {% if palabras %}
+            <p><strong>Palabras detectadas por el modelo:</strong></p>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                {% for palabra in palabras %}
+                <span class="tag {% if '🚨' in resultado %}tag-spam{% else %}tag-ham{% endif %}">
+                    {{ palabra }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        <button class="analyze-button">ANALIZAR</button>
+        {% endif %}
     </section>
 
     <div class="content-area">
@@ -47,24 +68,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="summary-row">
-                        <td class="summary-count-cell">
-                            <span class="summary-count">Spam detectado: 128</span>
-                            <span class="tag tag-spam tag-yes-count">SÍ, ES SPAM (128)</span>
-                        </td>
-                        <td>Ganaste una tarjeta de regalo, haz clic <a href="#">AQUÍ</a></td>
-                        <td>Contenido engañoso</td>
-                    </tr>
-                    <tr>
-                        <td><span class="tag tag-spam">SÍ</span></td>
-                        <td>Ganaste una tarjeta de regalo, haz clic A...</td>
-                        <td>Se ha detectado un enlace de suplantación de identidad</td>
-                    </tr>
-                    <tr>
-                        <td><span class="tag tag-ham">NO</span></td>
-                        <td>Enviado a scnurt@constactamentja</td>
-                        <td>Correo electrónico de servicio legítimo</td>
-                    </tr>
+
+                    {% if historial %}
+                        {% for item in historial|reverse %}
+                        <tr>
+                            <td>
+                                {% if "SPAM" in item.resultado %}
+                                    <span class="tag tag-spam">SÍ</span>
+                                {% else %}
+                                    <span class="tag tag-ham">NO</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.mensaje }}</td>
+                            <td>{{ item.resultado }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align:center; padding:20px;">
+                                Aún no se han analizado correos.
+                            </td>
+                        </tr>
+                    {% endif %}
+
                 </tbody>
             </table>
         </div>
@@ -72,14 +98,14 @@
         <div class="card stats-card">
             <h2 class="card-title">ESTADÍSTICAS:</h2>
             <ul class="stats-list">
-                <li><b>Conclusiones:</b> Análisis precise de los remitentes, dominios, y más...</li>
-                <li>
-                    <label class="collapsible-label">
-                        <b>Detalles:</b>
-                        <span class="collapse-icon">▼</span>
-                    </label>
-                </li>
-                <li><b>Tecnología:</b> Python HTML/CSS</li>
+                <li><b>Total analizados:</b> {{ historial|length }}</li>
+
+                
+                
+<li><b>Spam detectados:</b> {{ spam_count }}</li>
+<li><b>Mensajes limpios:</b> {{ ham_count }}</li>
+
+                <li><b>Tecnología:</b> Python, Flask, HTML/CSS, Machine Learning</li>
             </ul>
         </div>
     </div>

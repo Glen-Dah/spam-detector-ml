@@ -1,92 +1,143 @@
-# Mejora Sprint 6: limpieza avanzada para español
-
 import pandas as pd
 import re
-import os
-import pickle
+import nltk
+import joblib
+import unicodedata
+
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-# =========================
-# LIMPIEZA DE TEXTO
-# =========================
+# Descargar recursos de nltk
+nltk.download('stopwords')
+
+# Stopwords y stemming en español
+stop_words = set(stopwords.words('spanish'))
+stemmer = SnowballStemmer('spanish')
+
+# ==========================
+# FUNCIÓN DE LIMPIEZA
+# ==========================
 def limpiar_texto(texto):
     texto = texto.lower()
+
+    # Eliminar acentos
+    texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('utf-8')
+
+    # Eliminar links
+    texto = re.sub(r'http\S+|www\S+', '', texto)
+
+    # Eliminar correos
+    texto = re.sub(r'\S+@\S+', '', texto)
+
+    # Eliminar números
     texto = re.sub(r'\d+', '', texto)
-    texto = re.sub(r'[^\w\s]', '', texto)
-    texto = re.sub(r'\s+', ' ', texto).strip()
-    return texto
 
-# =========================
+    # Eliminar caracteres especiales
+    texto = re.sub(r'[^a-zA-Zñáéíóúü\s]', '', texto)
+
+    palabras = texto.split()
+
+    # Quitar stopwords y aplicar stemming
+    palabras_limpias = []
+    for palabra in palabras:
+        if palabra not in stop_words and len(palabra) > 2:
+            palabra = stemmer.stem(palabra)
+            palabras_limpias.append(palabra)
+
+    return " ".join(palabras_limpias)
+
+# ==========================
 # CARGAR DATASET
-# =========================
-df = pd.read_csv("data/spam.csv", encoding="latin-1")
+# ==========================
+data = pd.read_csv("data/spam.csv")
 
-# normalizar columnas
-if "v1" in df.columns:
-    df = df.rename(columns={"v1": "categoria", "v2": "mensaje"})
-else:
-    df = df.iloc[:, :2]
-    df.columns = ["categoria", "mensaje"]
+# Cambia estos nombres si tu dataset usa otros
+data = data.rename(columns={
+    'label': 'etiqueta',
+    'text': 'mensaje'
+})
 
-# limpiar texto
-df["mensaje"] = df["mensaje"].astype(str).apply(limpiar_texto)
+# Convertir etiquetas
+data['etiqueta'] = data['etiqueta'].map({
+    'spam': 1,
+    'ham': 0
+})
 
-# mapear etiquetas
-df["categoria"] = df["categoria"].map({"ham": 0, "spam": 1})
+# Limpiar mensajes
+data['mensaje'] = data['mensaje'].astype(str).apply(limpiar_texto)
 
-df = df.dropna()
+# Eliminar filas vacías
+data = data[data['mensaje'].str.strip() != '']
 
-# =========================
-# SPLIT
-# =========================
+# ==========================
+# TF-IDF MEJORADO
+# ==========================
+vectorizador = TfidfVectorizer(
+    max_features=5000,
+    ngram_range=(1, 2),
+    min_df=2,
+    max_df=0.95
+)
+
+X = vectorizador.fit_transform(data['mensaje'])
+y = data['etiqueta']
+
+# ==========================
+# TRAIN / TEST
+# ==========================
 X_train, X_test, y_train, y_test = train_test_split(
-    df["mensaje"],
-    df["categoria"],
+    X,
+    y,
     test_size=0.2,
-    random_state=42
+    random_state=42,
+    stratify=y
 )
 
-# =========================
-# TF-IDF
-# =========================
-vectorizer = TfidfVectorizer(
-    ngram_range=(1,2),
-    max_features=5000
-)
+# ==========================
+# MODELO 1: NAIVE BAYES
+# ==========================
+modelo_nb = MultinomialNB()
+modelo_nb.fit(X_train, y_train)
 
-X_train_vec = vectorizer.fit_transform(X_train)
-X_test_vec = vectorizer.transform(X_test)
+pred_nb = modelo_nb.predict(X_test)
 
-# =========================
-# MODELO
-# =========================
-model = MultinomialNB()
-model.fit(X_train_vec, y_train)
+print("\n=== NAIVE BAYES ===")
+print("Accuracy:", accuracy_score(y_test, pred_nb))
+print(classification_report(y_test, pred_nb))
+print(confusion_matrix(y_test, pred_nb))
 
-# =========================
-# MÉTRICAS
-# =========================
-y_pred = model.predict(X_test_vec)
+# ==========================
+# MODELO 2: REGRESIÓN LOGÍSTICA
+# ==========================
+modelo_lr = LogisticRegression(max_iter=1000)
+modelo_lr.fit(X_train, y_train)
 
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("\nReporte:")
-print(classification_report(y_test, y_pred))
-print("\nMatriz:")
-print(confusion_matrix(y_test, y_pred))
+pred_lr = modelo_lr.predict(X_test)
 
-# =========================
-# GUARDAR
-# =========================
-os.makedirs("src/model", exist_ok=True)
+print("\n=== REGRESIÓN LOGÍSTICA ===")
+print("Accuracy:", accuracy_score(y_test, pred_lr))
+print(classification_report(y_test, pred_lr))
+print(confusion_matrix(y_test, pred_lr))
 
-with open("src/model/model.pkl", "wb") as f:
-    pickle.dump(model, f)
+# ==========================
+# GUARDAR EL MEJOR MODELO
+# ==========================
+accuracy_nb = accuracy_score(y_test, pred_nb)
+accuracy_lr = accuracy_score(y_test, pred_lr)
 
-with open("src/model/vectorizer.pkl", "wb") as f:
-    pickle.dump(vectorizer, f)
+if accuracy_lr > accuracy_nb:
+    mejor_modelo = modelo_lr
+    nombre_modelo = "Regresión Logística"
+else:
+    mejor_modelo = modelo_nb
+    nombre_modelo = "Naive Bayes"
 
-print("Modelo guardado correctamente")
+joblib.dump((mejor_modelo, vectorizador), "app/model.pkl")
+
+print(f"\nMejor modelo guardado: {nombre_modelo}")

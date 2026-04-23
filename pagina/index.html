@@ -30,8 +30,7 @@
         <form method="POST">
             <div class="search-container">
                 <div class="search-icon">🔍</div>
-                <input type="text" name="mensaje" placeholder="Remitente/Asunto:" required>
-            </div>
+                <textarea name="mensaje" placeholder="Remitente/Asunto:" required rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>            </div>
 
             <button type="submit" class="analyze-button">ANALIZAR</button>
         </form>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>detectdo - Detector de Spam</title>
+    <title>Spam Web - Detector de Spam</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
@@ -12,11 +12,9 @@
     <header class="app-header">
         <div class="logo-group">
             <div class="logo-icon">✔</div>
-            <span>detectdo</span>
+            <span>Spam Web</span>
         </div>
         <div class="user-group">
-            <div class="stat-counter">{{ historial|length }}</div>
-            <div class="notification-icon">⚠</div>
             <div class="profile-icon">👤</div>
             <div class="user-name">Usuario</div>
         </div>
@@ -105,7 +103,7 @@
 <li><b>Spam detectados:</b> {{ spam_count }}</li>
 <li><b>Mensajes limpios:</b> {{ ham_count }}</li>
 
-                <li><b>Tecnología:</b> Python, Flask, HTML/CSS, Machine Learning</li>
+                <li><b>Tecnología:</b> Python, Flask, HTML/CSS, Machine Learning y Redes Neuronales</li>
             </ul>
         </div>
     </div>

@@ -90,25 +90,23 @@ body {
 .hero-subtitle { color: var(--text-secondary); max-width: 600px; margin-bottom: 30px; }
 
 .search-container {
-    width: 100%; max-width: 600px;
-    position: relative; margin-bottom: 20px;
+    width: 100%; 
+    max-width: 600px; /* Tamaño inicial */
+    position: relative; 
+    margin-bottom: 20px;
+    transition: max-width 0.2s ease-out; /* Hace que se estire suavemente horizontalmente */
 }
 
 .search-icon { 
-    position: absolute; left: 20px; top: 28px; /* Fija la lupa en la primera línea */
+    position: absolute; left: 20px; top: 50%; 
     transform: translateY(-50%); color: var(--text-secondary); 
 }
 
-.search-container textarea {
+.search-container input {
     width: 100%; padding: 18px 20px 18px 50px;
     border: 1px solid var(--border-color);
-    border-radius: 24px; /* Un poco menos curvo para que se vea bien al crecer */
-    box-sizing: border-box;
-    resize: none; /* Quita la esquina para arrastrar */
-    overflow: hidden; /* Oculta la barra de scroll */
-    font-family: inherit; /* Hereda tu fuente Inter */
-    font-size: inherit;
-    line-height: 1.5;
+    border-radius: 50px; box-sizing: border-box;
+    white-space: nowrap; /* Evita que el texto intente bajar de línea */
 }
 
 

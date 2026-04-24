@@ -91,10 +91,10 @@ body {
 
 .search-container {
     width: 100%; 
-    max-width: 600px; /* Tamaño inicial */
+    max-width: 700px; /* Cambiado de 600px a 700px para hacerla más larga */
     position: relative; 
-    margin-bottom: 20px;
-    transition: max-width 0.2s ease-out; /* Hace que se estire suavemente horizontalmente */
+    margin-bottom: 10px; /* Se redujo un poco ya que el botón ahora tiene su propio margen */
+    transition: max-width 0.2s ease-out; 
 }
 
 .search-icon { 

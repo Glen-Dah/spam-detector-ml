@@ -27,12 +27,13 @@
             Analice remitentes y asuntos para una detección precisa.
         </p>
 
-        <form method="POST">
-            <div class="search-container">
+        <form method="POST" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <div class="search-container" id="searchBox">
                 <div class="search-icon">🔍</div>
-                <div><input type="text" name="mensaje" placeholder="Remitente/Asunto:" required oninput="this.parentElement.style.maxWidth = Math.max(600, 100 + (this.value.length * 12)) + 'px'"></div>
-
-            <button type="submit" class="analyze-button">ANALIZAR</button>
+                <input type="text" name="mensaje" placeholder="Remitente/Asunto:" required oninput="document.getElementById('searchBox').style.maxWidth = Math.max(700, 50 + (this.value.length * 15)) + 'px'">
+            </div>
+            
+            <button type="submit" class="analyze-button" style="margin-top: 15px;">ANALIZAR</button>
         </form>
 
         {% if resultado %}

@@ -2,10 +2,6 @@
 venv/
 __pycache__/
 *.pyc
-
 # Archivos del sistema
 .DS_Store
 Thumbs.db
-
-# Datos pesados (opcional)
-*.pkl

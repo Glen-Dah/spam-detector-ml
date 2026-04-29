@@ -1,5 +1,7 @@
 from flask import Flask, request, render_template_string
-import pickle
+#import pickle
+import os
+import joblib
 
 app = Flask(
     __name__,
@@ -7,11 +9,10 @@ app = Flask(
     static_folder="../pagina"
 )
 
-with open("../src/model/model.pkl", "rb") as f:
-    model = pickle.load(f)
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+model_path = os.path.join(BASE_DIR, "src", "model", "model.pkl")
 
-with open("../src/model/vectorizer.pkl", "rb") as f:
-    vectorizer = pickle.load(f)
+model, vectorizer = joblib.load(model_path)
 
 historial = []
 

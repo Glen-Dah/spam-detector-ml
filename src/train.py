@@ -3,6 +3,7 @@ import re
 import nltk
 import joblib
 import unicodedata
+import os
 
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
@@ -10,7 +11,8 @@ from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.utils import resample
 
 # ==========================
@@ -22,7 +24,7 @@ stop_words = set(stopwords.words('spanish'))
 stemmer = SnowballStemmer('spanish')
 
 # ==========================
-# LIMPIEZA
+# LIMPIEZA DE TEXTO
 # ==========================
 def limpiar_texto(texto):
     texto = str(texto).lower()
@@ -46,26 +48,28 @@ def limpiar_texto(texto):
 # ==========================
 # CARGAR DATASET
 # ==========================
-data = pd.read_csv("data/spam.csv", encoding='latin-1')
+data = pd.read_csv("data/spam.csv", encoding='utf-8-sig', on_bad_lines='skip')
+data.columns = data.columns.str.strip()
 
+print("Columnas:", data.columns)
+
+# Renombrar columnas
 data = data.rename(columns={
     'label': 'etiqueta',
-    'message': 'message'
+    'message': 'mensaje'
 })
 
+# Limpiar nulos importantes
+data = data.dropna(subset=['mensaje', 'etiqueta'])
 
-data = data.dropna()
-
+# Normalizar etiquetas
 data['etiqueta'] = data['etiqueta'].astype(str).str.lower().str.strip()
-
 data['etiqueta'] = data['etiqueta'].map({
     'spam': 1,
     'ham': 0
 })
 
 data = data.dropna(subset=['etiqueta'])
-
-
 
 # ==========================
 # LIMPIAR TEXTO
@@ -74,7 +78,7 @@ data['mensaje'] = data['mensaje'].apply(limpiar_texto)
 data = data[data['mensaje'].str.strip() != '']
 
 # ==========================
-# BALANCEAR DATOS 🔥
+# BALANCEAR DATOS
 # ==========================
 spam = data[data['etiqueta'] == 1]
 ham = data[data['etiqueta'] == 0]
@@ -87,9 +91,10 @@ spam_upsampled = resample(
 )
 
 data = pd.concat([ham, spam_upsampled])
+data = data.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # ==========================
-# TF-IDF PRO
+# TF-IDF
 # ==========================
 vectorizador = TfidfVectorizer(
     max_features=7000,
@@ -113,21 +118,49 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # ==========================
-# MODELO FINAL
+# MODELO 1: NAIVE BAYES
 # ==========================
-modelo = MultinomialNB()
-modelo.fit(X_train, y_train)
+modelo_nb = MultinomialNB()
+modelo_nb.fit(X_train, y_train)
 
-pred = modelo.predict(X_test)
+pred_nb = modelo_nb.predict(X_test)
 
-print("\n=== MODELO FINAL (NAIVE BAYES) ===")
-print("Accuracy:", accuracy_score(y_test, pred))
-print(classification_report(y_test, pred))
-print(confusion_matrix(y_test, pred))
+print("\n=== NAIVE BAYES ===")
+print("Accuracy:", accuracy_score(y_test, pred_nb))
+print(classification_report(y_test, pred_nb))
+
+# ==========================
+# MODELO 2: REGRESIÓN LOGÍSTICA
+# ==========================
+modelo_lr = LogisticRegression(max_iter=1000)
+modelo_lr.fit(X_train, y_train)
+
+pred_lr = modelo_lr.predict(X_test)
+
+print("\n=== REGRESIÓN LOGÍSTICA ===")
+print("Accuracy:", accuracy_score(y_test, pred_lr))
+print(classification_report(y_test, pred_lr))
+
+# ==========================
+# COMPARACIÓN
+# ==========================
+accuracy_nb = accuracy_score(y_test, pred_nb)
+accuracy_lr = accuracy_score(y_test, pred_lr)
+
+if accuracy_lr > accuracy_nb:
+    mejor_modelo = modelo_lr
+    nombre_modelo = "Regresión Logística"
+else:
+    mejor_modelo = modelo_nb
+    nombre_modelo = "Naive Bayes"
+
+print(f"\nMejor modelo: {nombre_modelo}")
 
 # ==========================
 # GUARDAR MODELO
 # ==========================
-joblib.dump((modelo, vectorizador), "app/model.pkl")
+os.makedirs("src/model", exist_ok=True)
 
-print("\nModelo guardado correctamente 🚀")
+joblib.dump((mejor_modelo, vectorizador), "src/model/model.pkl")
+
+print("Modelo guardado correctamente 🚀")

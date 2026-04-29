@@ -1,112 +1,372 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spam Web - Detector de Spam</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpamShield — Detector de Spam</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="logo-group">
-            <div class="logo-icon">✔</div>
-            <span>Spam Web</span>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    SpamShield
+  </div>
+  <div class="nav-stats">
+    <div class="stat-pill">
+      📊 Analizados: <span class="count">{{ historial|length }}</span>
+    </div>
+    <div class="stat-pill">
+      🚨 Spam: <span class="count">{{ spam_count }}</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+      <span class="theme-icon">☀️</span>
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="theme-icon">🌙</span>
+    </button>
+    <div class="user-badge">
+      <div class="avatar">U</div>
+      Usuario
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">Motor de IA Activo</div>
+  <h1>Detector de <span class="grad">Spam</span></h1>
+  <p>Una herramienta inteligente para identificar y gestionar correos no deseados. Analiza remitentes, asuntos y contenido con precisión.</p>
+
+  <form method="POST" style="width:100%">
+    <div class="search-wrapper">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="mensaje" placeholder="Escribe el remitente o asunto del correo..." required>
+        <button type="submit" class="analyze-btn">Analizar</button>
+      </div>
+    </div>
+  </form>
+
+  {% if resultado %}
+  <div class="result-card {% if resultado and 'SPAM' in resultado %}spam{% else %}safe{% endif %} visible">
+    <div class="result-header">
+      <div class="result-icon {% if resultado and 'SPAM' in resultado %}spam{% else %}safe{% endif %}">
+        {% if resultado and 'SPAM' in resultado %}🚨{% else %}✅{% endif %}
+      </div>
+      <div>
+        <div class="result-title">{{ resultado }}</div>
+        <div class="result-sub">
+          {% if resultado and 'SPAM' in resultado %}Este mensaje presenta características de spam.{% else %}Este mensaje parece ser legítimo.{% endif %}
         </div>
-        <div class="user-group">
-            <div class="profile-icon">👤</div>
-            <div class="user-name">Usuario</div>
-        </div>
-    </header>
-
-    <section class="hero-section">
-        <h1 class="hero-title">Detector de Spam</h1>
-        <p class="hero-subtitle">
-            Una herramienta integral para identificar y gestionar correos electrónicos no deseados.
-            Analice remitentes y asuntos para una detección precisa.
-        </p>
-
-        <form method="POST" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-            <div class="search-container" id="searchBox">
-                <div class="search-icon">🔍</div>
-                <input type="text" name="mensaje" placeholder="Remitente/Asunto:" required oninput="document.getElementById('searchBox').style.maxWidth = Math.max(700, 50 + (this.value.length * 15)) + 'px'">
-            </div>
-            
-            <button type="submit" class="analyze-button" style="margin-top: 15px;">ANALIZAR</button>
-        </form>
-
-        {% if resultado %}
-        <div class="card" style="margin-top: 20px; max-width: 700px; width: 100%;">
-            <h2>{{ resultado }}</h2>
-
-            {% if palabras %}
-            <p><strong>Palabras detectadas por el modelo:</strong></p>
-            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                {% for palabra in palabras %}
-                <span class="tag {% if '🚨' in resultado %}tag-spam{% else %}tag-ham{% endif %}">
-                    {{ palabra }}
-                </span>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-    </section>
-
-    <div class="content-area">
-        <div class="card history-card">
-            <h2 class="card-title">HISTORIAL:</h2>
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">CLASIFICACIÓN</th>
-                        <th style="width: 50%;">CONTENIDO</th>
-                        <th style="width: 25%;">MOTIVO</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    {% if historial %}
-                        {% for item in historial|reverse %}
-                        <tr>
-                            <td>
-                                {% if "SPAM" in item.resultado %}
-                                    <span class="tag tag-spam">SÍ</span>
-                                {% else %}
-                                    <span class="tag tag-ham">NO</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ item.mensaje }}</td>
-                            <td>{{ item.resultado }}</td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="3" style="text-align:center; padding:20px;">
-                                Aún no se han analizado correos.
-                            </td>
-                        </tr>
-                    {% endif %}
-
-                </tbody>
-            </table>
-        </div>
-
-        <div class="card stats-card">
-            <h2 class="card-title">ESTADÍSTICAS:</h2>
-            <ul class="stats-list">
-                <li><b>Total analizados:</b> {{ historial|length }}</li>
-
-                
-                
-<li><b>Spam detectados:</b> {{ spam_count }}</li>
-<li><b>Mensajes limpios:</b> {{ ham_count }}</li>
-
-                <li><b>Tecnología:</b> Python, Flask, HTML/CSS, Machine Learning y Redes Neuronales</li>
-            </ul>
-        </div>
+      </div>
     </div>
 
+    {% if razon %}
+    <div class="razon-block">
+      <span class="razon-label">🤖 Razón:</span>
+      <span class="razon-text">{{ razon }}</span>
+    </div>
+    {% endif %}
+
+    {% if palabras %}
+    <div class="word-tags">
+      {% for palabra in palabras %}
+      <span class="word-tag spam">{{ palabra }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if confianza is not none %}
+    <div class="conf-bar-section">
+      <div class="conf-bar-label">
+        Confianza del modelo:
+        <span class="conf-pct-inline {% if resultado and 'SPAM' in resultado %}pct-spam{% else %}pct-safe{% endif %}">{{ confianza }}%</span>
+      </div>
+      <div class="conf-bar-track">
+        <div class="conf-bar-fill {% if resultado and 'SPAM' in resultado %}fill-spam{% else %}fill-safe{% endif %}"
+             style="width: {{ confianza }}%"></div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<!-- Content -->
+<div class="content-area">
+
+  <div class="glass-card">
+    <div class="card-header">
+      <span class="card-title">📋 Historial de análisis</span>
+      <span class="spam-badge-count">Spam detectado: {{ spam_count }}</span>
+    </div>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th style="width:100px">Resultado</th>
+          <th>Contenido analizado</th>
+          <th>Motivo</th>
+          <th style="width:80px">Ver</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if historial %}
+          {% for item in historial|reverse %}
+          <tr>
+            <td>
+              {% if "SPAM" in item.resultado %}
+                <span class="tag tag-spam">🚨 SÍ</span>
+              {% else %}
+                <span class="tag tag-ham">✅ NO</span>
+              {% endif %}
+            </td>
+            <td class="content-col">{{ item.mensaje }}</td>
+            <td class="motive-col">
+              {% if "SPAM" in item.resultado %}
+                <div class="warning-block">
+                  <div class="razon-ia">
+                    <span class="warning-label">⚠️ WARNING</span>
+                    <span class="razon-ia-text">{{ item.razon if item.razon else "Contiene patrones típicos de spam." }}</span>
+                  </div>
+                  {% if item.palabras and item.palabras|length > 0 %}
+                  <div class="spam-words-inline">
+                    {% for palabra in item.palabras %}
+                      <span class="spam-word-red">{{ palabra }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+                {% if item.confianza is defined and item.confianza is not none %}
+                <div class="conf-bar-section conf-bar-small">
+                  <div class="conf-bar-label">
+                    Confianza:
+                    <span class="conf-pct-inline pct-spam">{{ item.confianza }}%</span>
+                  </div>
+                  <div class="conf-bar-track">
+                    <div class="conf-bar-fill fill-spam" style="width: {{ item.confianza }}%"></div>
+                  </div>
+                </div>
+                {% endif %}
+              {% else %}
+                <span class="safe-label">✅ Mensaje limpio</span>
+                {% if item.confianza is defined and item.confianza is not none %}
+                <div class="conf-bar-section conf-bar-small">
+                  <div class="conf-bar-label">
+                    Confianza:
+                    <span class="conf-pct-inline pct-safe">{{ item.confianza }}%</span>
+                  </div>
+                  <div class="conf-bar-track">
+                    <div class="conf-bar-fill fill-safe" style="width: {{ item.confianza }}%"></div>
+                  </div>
+                </div>
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>
+              <button
+                class="view-btn {% if 'SPAM' in item.resultado %}view-btn-spam{% else %}view-btn-safe{% endif %}"
+                onclick="openModal(this)"
+                data-mensaje="{{ item.mensaje }}"
+                data-resultado="{{ item.resultado }}"
+                data-palabras="{{ item.palabras | join(',') if item.palabras else '' }}"
+                data-confianza="{{ item.confianza if item.confianza is defined and item.confianza is not none else '' }}"
+                data-razon="{{ item.razon if item.razon else '' }}"
+              >
+                Ver
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">Aún no se han analizado correos.</div>
+                <div class="empty-sub">Escribe un asunto o remitente arriba para comenzar.</div>
+              </div>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stats-card">
+    <div class="card-header">
+      <span class="card-title">📈 Estadísticas</span>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Total analizados</div>
+      <div class="stat-value total-color">{{ historial|length }}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Spam detectado</div>
+      <div class="stat-value spam-color">{{ spam_count }}</div>
+      <div class="mini-bar">
+        <div class="mini-fill spam" style="width:{% if historial|length > 0 %}{{ (spam_count / historial|length * 100)|int }}{% else %}0{% endif %}%"></div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Mensajes limpios</div>
+      <div class="stat-value safe-color">{{ ham_count }}</div>
+      <div class="mini-bar">
+        <div class="mini-fill safe" style="width:{% if historial|length > 0 %}{{ (ham_count / historial|length * 100)|int }}{% else %}0{% endif %}%"></div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Tecnología</div>
+      <div class="tech-tags">
+        <span class="tech-tag">Python</span>
+        <span class="tech-tag">Flask</span>
+        <span class="tech-tag">HTML/CSS</span>
+        <span class="tech-tag">Machine Learning</span>
+        <span class="tech-tag">Claude AI</span>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Acerca de</div>
+      <div class="about-text">Análisis preciso de remitentes, dominios y contenido. Motor de clasificación con IA + explicaciones generadas por Claude.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header" id="modalHeader">
+      <div class="modal-icon" id="modalIcon"></div>
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-label">Contenido completo del mensaje:</div>
+      <div class="modal-message" id="modalMessage"></div>
+
+      <div id="modalRazonSection" style="display:none; margin-top:1rem;">
+        <div class="modal-label">Razón del spam (IA):</div>
+        <div class="modal-razon" id="modalRazon"></div>
+      </div>
+
+      <div id="modalConfSection" style="display:none; margin-top:1rem;">
+        <div class="modal-label">Confianza del modelo:</div>
+        <div class="conf-bar-section" style="margin-top:6px;">
+          <div class="conf-bar-label">
+            <span id="modalConfLabel"></span>
+            <span class="conf-pct-inline" id="modalConfPct"></span>
+          </div>
+          <div class="conf-bar-track">
+            <div class="conf-bar-fill" id="modalConfFill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="modalWordsSection" style="display:none">
+        <div class="modal-label" style="margin-top:1rem;">Palabras sospechosas detectadas:</div>
+        <div class="spam-words-inline" id="modalWords"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- THEME ----
+const html = document.documentElement;
+const saved = localStorage.getItem('spamshield-theme') || 'light';
+html.setAttribute('data-theme', saved);
+
+function toggleTheme() {
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('spamshield-theme', next);
+}
+
+// ---- MODAL ----
+function openModal(btn) {
+  const mensaje    = btn.dataset.mensaje;
+  const resultado  = btn.dataset.resultado;
+  const palabras   = btn.dataset.palabras;
+  const confianza  = btn.dataset.confianza;
+  const razon      = btn.dataset.razon;
+  const isSpam     = resultado.includes('SPAM');
+
+  document.getElementById('modalIcon').textContent  = isSpam ? '🚨' : '✅';
+  document.getElementById('modalIcon').className    = 'modal-icon ' + (isSpam ? 'spam' : 'safe');
+  document.getElementById('modalTitle').textContent = resultado;
+  document.getElementById('modalTitle').className   = 'modal-title ' + (isSpam ? 'spam' : 'safe');
+  document.getElementById('modalSub').textContent   = isSpam
+    ? 'Este mensaje presenta características de spam.'
+    : 'Este mensaje parece ser legítimo.';
+  document.getElementById('modalMessage').textContent = mensaje;
+  document.getElementById('modalHeader').className  = 'modal-header ' + (isSpam ? 'spam' : 'safe');
+
+  // Razón IA
+  const razonSection = document.getElementById('modalRazonSection');
+  if (isSpam && razon && razon.trim() !== '') {
+    document.getElementById('modalRazon').textContent = razon;
+    razonSection.style.display = 'block';
+  } else {
+    razonSection.style.display = 'none';
+  }
+
+  // Barra de confianza
+  const confSection = document.getElementById('modalConfSection');
+  if (confianza && confianza.trim() !== '') {
+    const pct = parseInt(confianza);
+    document.getElementById('modalConfLabel').textContent = isSpam ? 'Spam: ' : 'Legítimo: ';
+    const pctEl = document.getElementById('modalConfPct');
+    pctEl.textContent = pct + '%';
+    pctEl.className = 'conf-pct-inline ' + (isSpam ? 'pct-spam' : 'pct-safe');
+    const fill = document.getElementById('modalConfFill');
+    fill.className = 'conf-bar-fill ' + (isSpam ? 'fill-spam' : 'fill-safe');
+    fill.style.width = '0%';
+    setTimeout(() => { fill.style.width = pct + '%'; }, 80);
+    confSection.style.display = 'block';
+  } else {
+    confSection.style.display = 'none';
+  }
+
+  // Palabras
+  const wordsSection   = document.getElementById('modalWordsSection');
+  const wordsContainer = document.getElementById('modalWords');
+  wordsContainer.innerHTML = '';
+  if (isSpam && palabras && palabras.trim() !== '') {
+    const lista = palabras.split(',').filter(p => p.trim() !== '');
+    lista.forEach(p => {
+      const span = document.createElement('span');
+      span.className = 'spam-word-red';
+      span.textContent = p.trim();
+      wordsContainer.appendChild(span);
+    });
+    wordsSection.style.display = 'block';
+  } else {
+    wordsSection.style.display = 'none';
+  }
+
+  document.getElementById('modalOverlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
 </body>
 </html>

@@ -1,15 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="es" data-theme="light">
 <head>
-    <title>Detector de Spam</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpamShield — Detector de Spam</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
-    <h1>Detector de Spam</h1>
+    <div class="simple-header">
+        <h1>🛡 Detector de Spam</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span class="theme-icon">☀️</span>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="theme-icon">🌙</span>
+        </button>
+    </div>
 
     <form method="POST">
-        <textarea name="mensaje" placeholder="Escribe un mensaje"></textarea>
+        <textarea name="mensaje" placeholder="Escribe un mensaje para analizar..."></textarea>
         <br><br>
         <button type="submit">Analizar</button>
     </form>
@@ -19,7 +29,7 @@
     {% endif %}
 
     {% if palabras %}
-        <p>Palabras detectadas:</p>
+        <p class="detected-label">Palabras detectadas:</p>
         <ul>
             {% for palabra in palabras %}
                 <li>{{ palabra }}</li>
@@ -28,13 +38,39 @@
     {% endif %}
 
     {% if historial %}
-        <h2>Historial</h2>
-        <ul>
+        <h2 style="margin-top:40px;">Historial</h2>
+        <ul class="history-list">
             {% for item in historial %}
-                <li>{{ item.mensaje }} → {{ item.resultado }}</li>
+                <li>
+                    <strong>{{ item.mensaje }}</strong>
+                    <span class="arrow">→</span>
+                    {% if "SPAM" in item.resultado %}
+                        <span class="warn-inline">⚠️ WARNING: spam detectado</span>
+                        {% if item.palabras %}
+                            —
+                            {% for palabra in item.palabras %}
+                                <span class="spam-word-red">{{ palabra }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    {% else %}
+                        <span class="safe-inline">✅ Legítimo</span>
+                    {% endif %}
+                </li>
             {% endfor %}
         </ul>
     {% endif %}
 
+<script>
+const html = document.documentElement;
+const saved = localStorage.getItem('spamshield-theme') || 'light';
+html.setAttribute('data-theme', saved);
+
+function toggleTheme() {
+    const current = html.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('spamshield-theme', next);
+}
+</script>
 </body>
 </html>

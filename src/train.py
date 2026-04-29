@@ -1,7 +1,7 @@
- HEAD
+ #HEAD
 # Mejora Sprint 6: limpieza avanzada para español
 # actualización
- 484de46 (feat: integración del modelo con aplicación web en Flask)
+ #484de46 (feat: integración del modelo con aplicación web en Flask)
 import pandas as pd
 import re
 import nltk

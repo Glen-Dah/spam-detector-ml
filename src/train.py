@@ -53,16 +53,13 @@ data.columns = data.columns.str.strip()
 
 print("Columnas:", data.columns)
 
-# Renombrar columnas
 data = data.rename(columns={
     'label': 'etiqueta',
     'message': 'mensaje'
 })
 
-# Limpiar nulos importantes
 data = data.dropna(subset=['mensaje', 'etiqueta'])
 
-# Normalizar etiquetas
 data['etiqueta'] = data['etiqueta'].astype(str).str.lower().str.strip()
 data['etiqueta'] = data['etiqueta'].map({
     'spam': 1,
@@ -96,14 +93,14 @@ data = data.sample(frac=1, random_state=42).reset_index(drop=True)
 # ==========================
 # TF-IDF
 # ==========================
-vectorizador = TfidfVectorizer(
+vectorizer = TfidfVectorizer(
     max_features=7000,
     ngram_range=(1, 3),
     min_df=1,
     max_df=0.9
 )
 
-X = vectorizador.fit_transform(data['mensaje'])
+X = vectorizer.fit_transform(data['mensaje'])
 y = data['etiqueta']
 
 # ==========================
@@ -120,10 +117,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 # ==========================
 # MODELO 1: NAIVE BAYES
 # ==========================
-modelo_nb = MultinomialNB()
-modelo_nb.fit(X_train, y_train)
+model_nb = MultinomialNB()
+model_nb.fit(X_train, y_train)
 
-pred_nb = modelo_nb.predict(X_test)
+pred_nb = model_nb.predict(X_test)
 
 print("\n=== NAIVE BAYES ===")
 print("Accuracy:", accuracy_score(y_test, pred_nb))
@@ -132,10 +129,10 @@ print(classification_report(y_test, pred_nb))
 # ==========================
 # MODELO 2: REGRESIÓN LOGÍSTICA
 # ==========================
-modelo_lr = LogisticRegression(max_iter=1000)
-modelo_lr.fit(X_train, y_train)
+model_lr = LogisticRegression(max_iter=1000)
+model_lr.fit(X_train, y_train)
 
-pred_lr = modelo_lr.predict(X_test)
+pred_lr = model_lr.predict(X_test)
 
 print("\n=== REGRESIÓN LOGÍSTICA ===")
 print("Accuracy:", accuracy_score(y_test, pred_lr))
@@ -148,10 +145,10 @@ accuracy_nb = accuracy_score(y_test, pred_nb)
 accuracy_lr = accuracy_score(y_test, pred_lr)
 
 if accuracy_lr > accuracy_nb:
-    mejor_modelo = modelo_lr
+    model = model_lr
     nombre_modelo = "Regresión Logística"
 else:
-    mejor_modelo = modelo_nb
+    model = model_nb
     nombre_modelo = "Naive Bayes"
 
 print(f"\nMejor modelo: {nombre_modelo}")
@@ -161,6 +158,6 @@ print(f"\nMejor modelo: {nombre_modelo}")
 # ==========================
 os.makedirs("src/model", exist_ok=True)
 
-joblib.dump((mejor_modelo, vectorizador), "src/model/model.pkl")
+joblib.dump((model, vectorizer), "src/model/model.pkl")
 
 print("Modelo guardado correctamente 🚀")

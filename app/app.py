@@ -148,17 +148,21 @@ def generar_razon_local(mensaje, palabras_clave):
 def filtrar_palabras(palabras_raw):
     filtradas = []
     vistas = set()
+
     for p in palabras_raw:
         limpia = p.strip().lower()
         partes = limpia.split()
+
         if len(partes) > 1:
             if any(parte in STOPWORDS or len(parte) < 3 for parte in partes):
                 continue
         else:
             if limpia in STOPWORDS or len(limpia) < 4:
                 continue
+
         ya_cubierta = False
-        for vista in vistas:
+
+        for vista in list(vistas):  # 🔥 AQUÍ ESTÁ EL FIX
             if limpia in vista or vista in limpia:
                 if len(limpia) <= len(vista):
                     ya_cubierta = True
@@ -166,11 +170,14 @@ def filtrar_palabras(palabras_raw):
                 else:
                     vistas.discard(vista)
                     filtradas = [f for f in filtradas if f.lower() != vista]
+
         if not ya_cubierta and limpia not in vistas:
             vistas.add(limpia)
             filtradas.append(p.upper())
+
         if len(filtradas) >= 10:
             break
+
     return filtradas
 
 

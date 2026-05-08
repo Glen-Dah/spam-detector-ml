@@ -1,7 +1,12 @@
-from flask import Flask, request, render_template_string
-#import pickle
+import re
+import unicodedata
 import os
+import math
 import joblib
+
+from flask import Flask, request, render_template_string
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
 
 app = Flask(
     __name__,
@@ -9,169 +14,191 @@ app = Flask(
     static_folder="../pagina"
 )
 
+# ==========================
+# CARGAR MODELO
+# ==========================
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-model_path = os.path.join(BASE_DIR, "src", "model", "model.pkl")
+
+model_path = os.path.join(
+    BASE_DIR,
+    "src",
+    "model",
+    "model.pkl"
+)
 
 model, vectorizer = joblib.load(model_path)
 
+# ==========================
+# VARIABLES
+# ==========================
 historial = []
+
+stop_words = set(stopwords.words('spanish'))
+stemmer = SnowballStemmer('spanish')
 
 STOPWORDS = {
     "el", "la", "los", "las", "un", "una", "unos", "unas",
     "a", "ante", "bajo", "con", "de", "desde", "en", "entre",
     "hacia", "hasta", "para", "por", "sin", "sobre", "tras",
     "y", "e", "ni", "o", "u", "pero", "que", "si", "como",
-    "yo", "tu", "el", "ella", "me", "te", "se", "nos", "le",
+    "yo", "tu", "ella", "me", "te", "se", "nos", "le",
     "es", "son", "era", "fue", "ser", "estar", "ha", "han",
-    "no", "si", "ya", "muy", "su", "sus", "al", "del", "lo",
+    "no", "ya", "muy", "su", "sus", "al", "del", "lo",
     "este", "esta", "mi", "mas", "menos", "tambien", "les",
     "bien", "mal", "aqui", "ahi", "alli", "asi", "hoy",
-    "otro", "otra", "todo", "toda", "cada", "cual", "cuyo",
-    "he", "has", "hay", "ser", "sido", "have", "the", "and",
-    "for", "are", "not", "with", "this", "that", "your",
-    "you", "can", "will", "from", "they", "all", "been",
-    "get", "its", "our", "out", "one", "but", "had", "was",
 }
 
-# ── Categorías de palabras clave → razón específica ──────────────────────────
+# ==========================
+# LIMPIEZA
+# ==========================
+def limpiar_texto(texto):
+
+    texto = str(texto).lower()
+
+    texto = unicodedata.normalize(
+        'NFKD',
+        texto
+    ).encode(
+        'ascii',
+        'ignore'
+    ).decode(
+        'utf-8'
+    )
+
+    texto = re.sub(r'http\S+|www\S+', '', texto)
+    texto = re.sub(r'\S+@\S+', '', texto)
+    texto = re.sub(r'\d+', '', texto)
+    texto = re.sub(r'[^a-zA-Z\s]', '', texto)
+
+    palabras = texto.split()
+
+    palabras_limpias = [
+        stemmer.stem(p)
+        for p in palabras
+        if p not in stop_words and len(p) > 2
+    ]
+
+    return " ".join(palabras_limpias)
+
+# ==========================
+# CATEGORÍAS
+# ==========================
 CATEGORIAS = [
+
     {
-        "palabras": {"prize", "winner", "won", "award", "premio", "ganador", "ganaste",
-                     "felicidades", "congratulations", "selected", "elegido", "reward"},
-        "razon": "Simula notificar un premio o sorteo falso para obtener datos personales."
+        "palabras": {
+            "premio", "ganaste", "winner",
+            "prize", "reward", "felicidades"
+        },
+
+        "razon":
+        "El mensaje intenta convencer al usuario de que ganó un premio o recompensa falsa para obtener información personal."
     },
+
     {
-        "palabras": {"free", "gratis", "gratuito", "gift", "regalo", "giveaway",
-                     "freebie", "complimentary", "sin costo", "costo cero"},
-        "razon": "Ofrece productos o servicios gratuitos como gancho para captar al usuario."
+        "palabras": {
+            "gratis", "free", "gift",
+            "regalo", "beneficio"
+        },
+
+        "razon":
+        "El mensaje ofrece productos o servicios gratuitos de forma sospechosa para atraer la atención del usuario."
     },
+
     {
-        "palabras": {"click", "link", "enlace", "url", "visit", "visita", "open",
-                     "abre", "here", "aqui", "download", "descarga", "access", "accede"},
-        "razon": "Incita a hacer clic en enlaces sospechosos que pueden ser maliciosos."
+        "palabras": {
+            "click", "clic", "link",
+            "enlace", "download",
+            "descarga", "visit"
+        },
+
+        "razon":
+        "El mensaje solicita ingresar a enlaces potencialmente peligrosos o maliciosos."
     },
+
     {
-        "palabras": {"password", "contraseña", "account", "cuenta", "verify", "verifica",
-                     "confirm", "confirma", "login", "credentials", "credenciales",
-                     "security", "seguridad", "update", "actualiza", "banco", "bank"},
-        "razon": "Suplanta a una entidad oficial para robar credenciales o datos bancarios."
+        "palabras": {
+            "banco", "bank", "password",
+            "cuenta", "login",
+            "credenciales", "verify"
+        },
+
+        "razon":
+        "El mensaje intenta obtener credenciales o información bancaria simulando ser una entidad oficial."
     },
+
     {
-        "palabras": {"money", "dinero", "cash", "efectivo", "earn", "gana", "income",
-                     "ingreso", "profit", "ganancia", "investment", "inversion",
-                     "dollar", "dolar", "peso", "bitcoin", "crypto", "rich", "rico",
-                     "millionaire", "millonario", "fortune", "fortuna"},
-        "razon": "Promete ganancias económicas fáciles o inversiones fraudulentas."
+        "palabras": {
+            "urgente", "urgent", "ahora",
+            "immediate", "limited",
+            "vence", "today"
+        },
+
+        "razon":
+        "El mensaje utiliza lenguaje de urgencia para presionar al usuario a actuar rápidamente."
     },
+
     {
-        "palabras": {"urgent", "urgente", "immediate", "inmediato", "now", "ahora",
-                     "expire", "vence", "limited", "limitado", "hurry", "apurate",
-                     "deadline", "last chance", "ultima oportunidad", "today", "hoy"},
-        "razon": "Usa lenguaje de urgencia falsa para presionar al usuario a actuar rápido."
+        "palabras": {
+            "dinero", "money", "bitcoin",
+            "crypto", "investment",
+            "profit", "ganancia"
+        },
+
+        "razon":
+        "El mensaje promete ganancias económicas rápidas o inversiones sospechosas."
     },
+
     {
-        "palabras": {"cheap", "barato", "discount", "descuento", "offer", "oferta",
-                     "sale", "promo", "deal", "rebaja", "saving", "ahorro",
-                     "best price", "mejor precio", "lowest", "mas bajo"},
-        "razon": "Promete descuentos o precios irreales para atraer compradores."
-    },
-    {
-        "palabras": {"weight", "peso", "diet", "dieta", "lose", "pierde", "fat",
-                     "grasa", "slim", "delgado", "pill", "pastilla", "supplement",
-                     "suplemento", "cure", "cura", "miracle", "milagro", "health",
-                     "salud", "viagra", "pharmacy", "farmacia", "medication", "medicamento"},
-        "razon": "Publicita productos milagrosos de salud o medicamentos sin respaldo médico."
-    },
-    {
-        "palabras": {"job", "trabajo", "hire", "contrata", "employment", "empleo",
-                     "remote", "remoto", "work from home", "desde casa", "salary",
-                     "salario", "apply", "aplica", "position", "puesto", "career"},
-        "razon": "Ofrece empleos o ingresos remotos falsos para obtener datos personales."
-    },
-    {
-        "palabras": {"loan", "prestamo", "credit", "credito", "debt", "deuda",
-                     "approved", "aprobado", "refinance", "refinancia", "mortgage",
-                     "hipoteca", "finance", "financiamiento", "interest", "interes"},
-        "razon": "Ofrece préstamos o créditos fáciles con condiciones engañosas o fraudulentas."
-    },
-    {
-        "palabras": {"porn", "sex", "adult", "adulto", "nude", "desnudo", "xxx",
-                     "dating", "citas", "meet", "conoce", "singles", "solteros"},
-        "razon": "Contiene contenido adulto o de citas no solicitado."
-    },
-    {
-        "palabras": {"unsubscribe", "cancel", "remove", "eliminar", "opt-out",
-                     "stop receiving", "dejar de recibir", "mailing list", "lista de correo"},
-        "razon": "Usa tácticas de desuscripción engañosas típicas de listas de correo masivo."
+        "palabras": {
+            "trabajo", "empleo",
+            "salary", "remote",
+            "work from home"
+        },
+
+        "razon":
+        "El mensaje ofrece oportunidades laborales poco realistas o sospechosas."
     },
 ]
 
-
-def generar_razon_local(mensaje, palabras_clave):
-    """
-    Genera una razón específica analizando el contenido del mensaje
-    y las palabras clave detectadas, sin necesidad de API externa.
-    """
-    texto = mensaje.lower()
-    palabras_lower = [p.lower() for p in palabras_clave]
-
-    # Buscar coincidencias en cada categoría
-    mejor_categoria = None
-    mejor_score = 0
-
-    for cat in CATEGORIAS:
-        score = 0
-        # Coincidencias en palabras clave detectadas por el modelo
-        for pk in palabras_lower:
-            for trigger in cat["palabras"]:
-                if trigger in pk or pk in trigger:
-                    score += 2
-        # Coincidencias directas en el texto del mensaje
-        for trigger in cat["palabras"]:
-            if trigger in texto:
-                score += 1
-        if score > mejor_score:
-            mejor_score = score
-            mejor_categoria = cat
-
-    if mejor_categoria and mejor_score > 0:
-        return mejor_categoria["razon"]
-
-    # Fallback con las palabras detectadas si no hay categoría clara
-    if palabras_clave:
-        muestra = ", ".join(p.lower() for p in palabras_clave[:3])
-        return f"Contiene términos sospechosos asociados a spam: {muestra}."
-
-    return "Presenta estructura y patrones lingüísticos típicos de correo no deseado."
-
-
+# ==========================
+# FILTRAR PALABRAS
+# ==========================
 def filtrar_palabras(palabras_raw):
+
     filtradas = []
     vistas = set()
 
     for p in palabras_raw:
-        limpia = p.strip().lower()
-        partes = limpia.split()
 
-        if len(partes) > 1:
-            if any(parte in STOPWORDS or len(parte) < 3 for parte in partes):
-                continue
-        else:
-            if limpia in STOPWORDS or len(limpia) < 4:
-                continue
+        limpia = p.strip().lower()
+
+        if limpia in STOPWORDS:
+            continue
+
+        if len(limpia) < 4:
+            continue
 
         ya_cubierta = False
 
-        for vista in list(vistas):  # 🔥 AQUÍ ESTÁ EL FIX
+        for vista in list(vistas):
+
             if limpia in vista or vista in limpia:
+
                 if len(limpia) <= len(vista):
                     ya_cubierta = True
                     break
+
                 else:
                     vistas.discard(vista)
-                    filtradas = [f for f in filtradas if f.lower() != vista]
 
-        if not ya_cubierta and limpia not in vistas:
+                    filtradas = [
+                        f for f in filtradas
+                        if f.lower() != vista
+                    ]
+
+        if not ya_cubierta:
+
             vistas.add(limpia)
             filtradas.append(p.upper())
 
@@ -180,70 +207,212 @@ def filtrar_palabras(palabras_raw):
 
     return filtradas
 
+# ==========================
+# GENERAR RAZÓN
+# ==========================
+def generar_razon_local(mensaje, palabras_clave):
 
+    texto = mensaje.lower()
+
+    palabras_lower = [
+        p.lower()
+        for p in palabras_clave
+    ]
+
+    mejor_categoria = None
+    mejor_score = 0
+
+    for cat in CATEGORIAS:
+
+        score = 0
+
+        # palabras detectadas
+        for pk in palabras_lower:
+
+            for trigger in cat["palabras"]:
+
+                if trigger in pk or pk in trigger:
+                    score += 2
+
+        # texto completo
+        for trigger in cat["palabras"]:
+
+            if trigger in texto:
+                score += 1
+
+        if score > mejor_score:
+
+            mejor_score = score
+            mejor_categoria = cat
+
+    if mejor_categoria and mejor_score > 0:
+
+        return mejor_categoria["razon"]
+
+    if palabras_clave:
+
+        muestra = ", ".join(
+            p.lower()
+            for p in palabras_clave[:3]
+        )
+
+        return (
+            f"El sistema detectó términos "
+            f"sospechosos relacionados con spam "
+            f"como: {muestra}."
+        )
+
+    return (
+        "El mensaje contiene patrones "
+        "lingüísticos asociados a correo no deseado."
+    )
+
+# ==========================
+# CONFIANZA
+# ==========================
 def calcular_confianza(model, vec, pred):
+
     try:
+
         proba = model.predict_proba(vec)[0]
-        return int(round(proba[1] * 100)) if pred == 1 else int(round(proba[0] * 100))
+
+        if pred == 1:
+            return int(round(proba[1] * 100))
+        else:
+            return int(round(proba[0] * 100))
+
     except AttributeError:
-        pass
-    try:
-        import math
+
         score = model.decision_function(vec)[0]
+
         prob = 1 / (1 + math.exp(-score))
-        return int(round(prob * 100)) if pred == 1 else int(round((1 - prob) * 100))
-    except AttributeError:
-        pass
-    return 85
 
+        if pred == 1:
+            return int(round(prob * 100))
+        else:
+            return int(round((1 - prob) * 100))
 
+# ==========================
+# APP
+# ==========================
 @app.route("/", methods=["GET", "POST"])
 def index():
+
     resultado = None
-    palabras  = []
+    palabras = []
     confianza = None
-    razon     = None
+    razon = None
 
     if request.method == "POST":
+
         text = request.form["mensaje"]
 
         if not text.strip():
+
             return render_template_string(
-                open("../pagina/index.html", encoding="utf-8").read(),
-                resultado="Ingresa un mensaje valido",
-                palabras=[], confianza=None, razon=None,
-                historial=historial, spam_count=0, ham_count=0
+                open(
+                    "../pagina/index.html",
+                    encoding="utf-8"
+                ).read(),
+
+                resultado="Ingresa un mensaje válido",
+                palabras=[],
+                confianza=None,
+                razon=None,
+                historial=historial,
+                spam_count=0,
+                ham_count=0
             )
 
-        vec  = vectorizer.transform([text])
-        pred = model.predict(vec)[0]
-        confianza = calcular_confianza(model, vec, pred)
+        # ==========================
+        # LIMPIAR TEXTO
+        # ==========================
+        texto_limpio = limpiar_texto(text)
 
-        if pred == 1:
-            resultado     = "Detectado como SPAM"
-            feature_names = vectorizer.get_feature_names_out()
-            vector        = vec.toarray()[0]
-            palabras_raw  = [feature_names[i] for i in range(len(vector)) if vector[i] > 0]
-            palabras      = filtrar_palabras(palabras_raw)
-            razon         = generar_razon_local(text, palabras)
+        # ==========================
+        # VECTORIZAR
+        # ==========================
+        vec = vectorizer.transform(
+            [texto_limpio]
+        )
+
+        # ==========================
+        # PROBABILIDAD
+        # ==========================
+        proba = model.predict_proba(vec)[0][1]
+
+        # threshold mejorado
+        if proba >= 0.60:
+            pred = 1
         else:
-            resultado = "Mensaje limpio"
-            palabras  = []
-            razon     = None
+            pred = 0
 
+        confianza = int(round(proba * 100))
+
+        # ==========================
+        # RESULTADO
+        # ==========================
+        if pred == 1:
+
+            resultado = "🚨 Detectado como SPAM"
+        if pred == 1:
+
+            resultado = "🚨 Detectado como SPAM"
+
+            # Extraer palabras reales del texto original
+            palabras_raw = re.findall(
+                r'\b[a-zA-ZáéíóúÁÉÍÓÚñÑ]+\b',
+                text
+            )
+
+            palabras = filtrar_palabras(
+                palabras_raw
+            )
+
+            razon = generar_razon_local(
+                text,
+                palabras
+            )       
+
+        else:
+
+            resultado = "✅ Mensaje limpio"
+
+            palabras = []
+
+            razon = (
+                "El mensaje no presenta "
+                "características comunes de spam."
+            )
+
+        # ==========================
+        # HISTORIAL
+        # ==========================
         historial.append({
-            "mensaje":   text,
+
+            "mensaje": text,
             "resultado": resultado,
-            "palabras":  palabras,
+            "palabras": palabras,
             "confianza": confianza,
-            "razon":     razon,
+            "razon": razon
         })
 
-    spam_count = sum(1 for item in historial if "SPAM" in item["resultado"])
-    ham_count  = len(historial) - spam_count
+    spam_count = sum(
+
+        1 for item in historial
+
+        if "SPAM" in item["resultado"]
+    )
+
+    ham_count = len(historial) - spam_count
 
     return render_template_string(
-        open("../pagina/index.html", encoding="utf-8").read(),
+
+        open(
+            "../pagina/index.html",
+            encoding="utf-8"
+        ).read(),
+
         resultado=resultado,
         palabras=palabras,
         confianza=confianza,
@@ -253,6 +422,9 @@ def index():
         ham_count=ham_count
     )
 
-
+# ==========================
+# RUN
+# ==========================
 if __name__ == "__main__":
+
     app.run(debug=True)
